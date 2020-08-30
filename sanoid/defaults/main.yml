@@ -1,0 +1,58 @@
+---
+# Setting cron_interval influences what possible schedules you can use.
+# cron must run at least as often as the quickest (shortest interval) schedule,
+# you have set or you'll be missing snapshots.
+cron_interval: hourly # any cron special time (@daily, @hourly, etc, but without the @ in front)
+
+# A simple AND practical example configuration:
+# pools:
+#   - name: my_data
+#     schedule:
+#       hourly: 24
+#       daily: 3
+#       monthly: 3
+#     datasets:
+#       - name: Code
+#       - name: Documents
+#       - name: Music
+#       - name: Movies
+#       - name: Shows
+
+# The following example shows two zfs pools.
+# One is named "my_data" and has important stuff in it.
+# The other is named "Media" and has backups of purchased media
+# that can be re-made in case of total disk failure.
+# In practice, your config should look much more simple (above) than this overly-complicated example (below).
+# This just shows off what's possible with this ansible role
+pools:
+  - name: my_data
+    auto:
+      snap: "yes" # take snapshots (this is the default)
+      prune: "yes" # remove old snapshots (this is the default)
+
+    schedule: # at what frequency do you want to take/prune snapshots?
+      frequently: 0 # this means "minutely" - every minute! no, thanks!
+      hourly: 24 # if the change was more than 24 hours ago...
+      daily: 3 # jump back up to 3 days ago. if it was before that...
+      monthly: 3 # jump back up to 3 months ago. if it was before that, you're hosed. 
+      yearly: 0 # no yearly backups
+
+    datasets:
+      - name: Code # 'recursive = yes' is implied
+      - name: Documents
+
+  - name: Media
+    # auto.snap implied "yes"
+    # auto.prune implied "yes"
+
+    schedule:
+      daily: 3 # ONLY keep daily snapshots for datasets in this pool; all other times default to 0 snapshots
+
+    datasets:
+      - name: Music
+        recursive: "no"
+        overrides: # but also do hourly for only this specific dataset
+          - key: hourly
+            value: 1
+      - name: Movies
+      - name: Shows

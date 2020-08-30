@@ -1,0 +1,24 @@
+{% for pool in pools %}
+{% for dataset in pool.datasets %}
+[{{ pool.name }}/{{ dataset.name }}]
+	use_template = {{ pool.name }}
+	recursive = {{ dataset.recursive | default("yes") }}
+	{% if dataset.overrides | default([]) %}{% for override in dataset.overrides %}{% if override.key and override.value %}{{ override.key }} = {{ override.value }}{% endif %}{% endfor %}{% endif %}
+
+
+{% endfor %}
+
+[template_{{ pool.name }}]
+	autosnap = {{ auto.snap | default("yes") }}
+	autoprune = {{ auto.prune | default("yes") }}
+	frequently = {{ pool.schedule.frequently | default(0) }}
+	hourly = {{ pool.schedule.hourly | default(0) }}
+	daily = {{ pool.schedule.daily | default(0) }}
+	monthly = {{ pool.schedule.monthly | default(0) }}
+	yearly = {{ pool.schedule.yearly | default(0) }}
+{% endfor %}
+
+[template_ignore]
+	autoprune = no
+	autosnap = no
+	monitor = no
